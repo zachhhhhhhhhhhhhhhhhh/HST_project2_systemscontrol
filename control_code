@@ -1,0 +1,52 @@
+% Define the system matrix A for glucose-insulin model
+A = [674/675 -0.9 0 0; 
+    0 0.606 0.251 0; 
+    0 0 0.606 2800; 
+    0 0 3.15*10.^-8 -2799];
+
+% Display the matrix A
+disp('System Matrix A:');
+disp(A);
+
+% Calculate eigenvalues only
+lambda = eig(A);
+disp('Eigenvalues (lambda):');
+disp(lambda);
+
+% Calculate both eigenvalues and eigenvectors
+[V, D] = eig(A);
+disp('Eigenvalues (diagonal of D):');
+disp(diag(D));
+
+disp('Eigenvectors (columns of V):');
+disp(V);
+
+% Display each eigenvector with its corresponding eigenvalue
+fprintf('\nDetailed Eigenanalysis:\n');
+fprintf('========================\n');
+for i = 1:length(lambda)
+    fprintf('Eigenvalue %d: %.6f\n', i, lambda(i));
+    fprintf('Corresponding Eigenvector %d:\n', i);
+    fprintf('  [%.6f, %.6f, %.6f, %.6f]\n', V(:,i));
+    fprintf('\n');
+end
+
+% Check stability (all eigenvalues should have negative real parts for stability)
+fprintf('Stability Analysis:\n');
+fprintf('==================\n');
+real_parts = real(lambda);
+if all(real_parts < 0)
+    fprintf('System is STABLE (all eigenvalues have negative real parts)\n');
+else
+    fprintf('System is UNSTABLE (some eigenvalues have non-negative real parts)\n');
+end
+
+fprintf('Real parts of eigenvalues: ');
+fprintf('%.6f  ', real_parts);
+fprintf('\n');
+
+% Display eigenvalues in exponential form if they are very small
+fprintf('\nEigenvalues in scientific notation:\n');
+for i = 1:length(lambda)
+    fprintf('λ_%d = %.6e\n', i, lambda(i));
+end

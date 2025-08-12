@@ -2,10 +2,10 @@
 % HST Project 2 - Systems Control
 
 % Define the system matrix A for glucose-insulin model
-A = [674/675 -0.9 0 0; 
-    0 0.606 0.251 0; 
-    0 0 0.606 2800; 
-    0 0 3.15*10.^-8 -2799];
+A = [-306.8941178 0.01008483167 0 0; 
+        0 0.606 0.142 0; 
+        0 0.394 0.749 2800; 
+        0 0 3.15*10.^-8 -2799];
 
 % Display the matrix A
 fprintf('System Matrix A:\n');

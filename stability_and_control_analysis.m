@@ -9,10 +9,10 @@ A = [-306.8941178 0.01008483167 0 0;
         0 0 3.15*10.^-8 -2799];
 
 % Example control input matrix B (assuming single input)
-B = [1 0;
-     0 0;
-     0 1;
-    0 0];  % Adjust based on your actual system
+B = [1, 0;
+     0, 0;
+     0, 1;
+    0, 0];  % Adjust based on your actual system
 
 fprintf('STABILITY vs CONTROLLABILITY ANALYSIS\n');
 fprintf('=====================================\n\n');
@@ -88,24 +88,6 @@ else
     fprintf('→ Cannot be controlled in all directions\n');
 end
 
-if ~stable
-    fprintf('• The open-loop system is unstable\n');
-    fprintf('• This is TYPICAL for biological systems\n');
-    fprintf('• Feedback control is NECESSARY for stable operation\n');
-    fprintf('• Many successful control systems start with unstable plants\n');
-    fprintf('  (examples: aircraft, rockets, inverted pendulum)\n\n');
-else
-    fprintf('• The open-loop system is stable\n');
-    fprintf('• Control can improve performance (faster response, disturbance rejection)\n\n');
-end
 
-if controllable
-    fprintf('• All unstable modes can be stabilized with proper feedback\n');
-    fprintf('• You can place closed-loop poles anywhere you want\n');
-    fprintf('• Design techniques: pole placement, LQR, H∞, etc.\n');
-else
-    fprintf('• Some modes cannot be controlled\n');
-    fprintf('• Check if uncontrollable modes are stable\n');
-    fprintf('• May need additional actuators or different control strategy\n');
-end
+
 

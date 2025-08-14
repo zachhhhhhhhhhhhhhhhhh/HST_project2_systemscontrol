@@ -76,16 +76,9 @@ ylabel('i3(t) $x_4(t)$', 'Interpreter', 'latex', 'FontSize', 16);
 title('i3(t) Over Time', 'Interpreter', 'latex', 'FontSize', 16);
 grid on;
 
-subplot(1, 6, 5);
-plot(1:T, u1, 'Color', [1 0.4 0], 'LineWidth', 2);
+subplot(1, 6, 6);
+plot(1:T, u1, 'k--', 'LineWidth', 2);
 xlabel('Time Step');
 ylabel('IV Glucose $u1(t)$', 'Interpreter', 'latex', 'FontSize', 16);
 title('IV Glucose Input Over Time', 'Interpreter', 'latex', 'FontSize', 16);
-grid on;
-
-subplot(1, 6, 6);
-plot(1:T, u2,'Color', [1 0.4 0], 'LineWidth', 2);
-xlabel('Time Step');
-ylabel('IV Insulin $u2(t)$', 'Interpreter', 'latex', 'FontSize', 16);
-title('IV Insulin Over Time', 'Interpreter', 'latex', 'FontSize', 16);
 grid on;

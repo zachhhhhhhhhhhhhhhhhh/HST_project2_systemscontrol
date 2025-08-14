@@ -1,9 +1,7 @@
 
-clear all; close all;
-
 % Parameters
 T = 60;                   % Total simulation time (in minutes)
-k0 = 0;                   % Insulin-independent fractional removal rate
+k0 = 0.0165;                   % Insulin-independent fractional removal rate
 a1 = 0;                   % a1 - a6 parameters
 a2 = 0;                 
 a3 = 0;
@@ -12,19 +10,23 @@ a5 = 0;
 a6 = 0;
 
 % Equilibrium point (upright)
-x_bar = [2;
-         0;
-         pi;
-         0]; 
-u_bar = [0;
-         0];
-y_bar = [2]; 
+x_bar1 = 1.00;
+x_bar3 = 0.125;
+x_bar2 = (a2*x_bar3)/a1;
+x_bar4 = (a5*x_bar3)/a6;
+x_bar = [x_bar1;
+         x_bar2;
+         x_bar3;
+         x_bar4]; 
+u_bar = [x_bar1*(k0+x_bar2);
+         (a3 + a2*a3*a4 + a5)*(x_bar3)];
+y_bar = x_bar1; 
 
-% Linearized system matrices at (x3 = pi)
-A = [1, 1, 0, 0; 
-     0, 1, -g, 0; 
-     0, 0, 1, 1; 
-     0, 0, -2*g, 1]; 
+% Linearized system matrices at ()
+A = [1-(k0+x_bar2), -x_bar1, 0, 0; 
+     0, 1-a1, a2, 0; 
+     0, a4, 1-a3, a6; 
+     0, 0, a5, 1-a6]; 
 B = [1, 0; 
      0, 0;
      0, 1;
@@ -52,7 +54,7 @@ x4(1) = 0;
 xhat = zeros(4, T+1);  
 
 % Control input
-u = zeros(1, T+1); 
+u = zeros(2, T+1); 
 
 % Simulation loop
 for t = 1:T

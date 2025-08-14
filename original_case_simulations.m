@@ -12,8 +12,8 @@ a5 = 3.15*10^-8;
 a6 = 2.8*10^3;
 
 % Equilibrium point (upright)
-x_bar1 = 1.00;
-x_bar3 = 0.125;
+x_bar1 = 1.08;
+x_bar3 = 0.3;
 x_bar2 = (a2*x_bar3)/a1;
 x_bar4 = (a5*x_bar3)/a6;
 x_bar = [x_bar1;
@@ -24,6 +24,17 @@ u_bar = [x_bar1*(k0+x_bar2);
          (a3 + a2*a3*a4 + a5)*(x_bar3)];
 y_bar = x_bar1; 
 
+% Define your matrix A here
+A = [1-(k0+x_bar2), -(x_bar1), 0, 0; 
+     0, 1-a1, a2, 0; 
+     0, a4, 1-a3, a6; 
+     0, 0, a5, 1-a6]; % Replace with your actual matrix definition
+
+% Calculate and print the eigenvalues
+eigenvalues = eig(A);
+disp('Eigenvalues of the matrix A:');
+disp(eigenvalues);
+
 % Initial states
 x1 = zeros(1, T+1);      % Inventory
 x2 = zeros(1, T+1);      % Degradation
@@ -31,15 +42,15 @@ x3 = zeros(1, T+1);
 x4 = zeros(1,T+1);
 u1 = zeros(1, T);        % Control input
 u2 = zeros(1, T);
-x1(1) = 0.9;            % Initial inventory
-x2(1) = ((2/150)/0.9)-0.0165;               % Initial degradation
+x1(1) = 1.08;            % Initial inventory
+x2(1) = ((0.0165 + (a2/a1)*(0.25))/1.0)-0.0165;               % Initial degradation
 x3(1) = 0;
 x4(1) = 0;
 
 % Simulation loop
 for t = 1:T
-    u1(t) = 2/150;   % IV Glucose input rate
-    u2(t) = (a3 + a2*a3*a4 + a5)*(x_bar3);                  % IV Insulin input rate
+    u1(t) = 0.0165 + (a2/a1)*(x3(t));   % IV Glucose input rate
+    u2(t) = (a3 + a2*a3*a4 + a5)*(x3(t));                  % IV Insulin input rate
     x1(t+1) = x1(t) - (k0+x2(t))*x1(t) + u1(t);           % Glucose Concentration
     x2(t+1) = x2(t) - a1*x2(t) + a3*x3(t);                  % k(t)
     x3(t+1) = x3(t) - a3*x3(t) + a4*x4(t) + a6*x4(t) + u2(t); % i(t)
@@ -89,3 +100,5 @@ xlabel('Time Step');
 ylabel('IV Insulin $u2(t)$', 'Interpreter', 'latex', 'FontSize', 16);
 title('IV Insulin Over Time', 'Interpreter', 'latex', 'FontSize', 16);
 grid on;
+
+

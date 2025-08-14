@@ -10,7 +10,7 @@ a5 = 0;
 a6 = 0;
 
 % Equilibrium point (upright)
-x_bar1 = 1.00;
+x_bar1 = 1.08;
 x_bar3 = 0.125;
 x_bar2 = (a2*x_bar3)/a1;
 x_bar4 = (a5*x_bar3)/a6;

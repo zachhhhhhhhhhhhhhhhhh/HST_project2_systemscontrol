@@ -2,7 +2,7 @@
 clear; clc; close all;
 
 % Parameters
-T = 60;                   % Total simulation time (in minutes)
+T = 360;                   % Total simulation time (in minutes)
 k0 = 0.0165;              % Insulin-independent fractional removal rate
 a1 = 0.394;                   % a1 - a6 parameters
 a2 = 0.142;                 
@@ -12,8 +12,8 @@ a5 = 3.15*10^-8;
 a6 = 2.8*10^3;
 
 % Equilibrium point (upright)
-x_bar1 = 1.08;
-x_bar3 = 0.3;
+x_bar1 = 0.95;
+x_bar3 = 0.03;
 x_bar2 = (a2*x_bar3)/a1;
 x_bar4 = (a5*x_bar3)/a6;
 x_bar = [x_bar1;
@@ -36,14 +36,14 @@ disp('Eigenvalues of the matrix A:');
 disp(eigenvalues);
 
 % Initial states
-x1 = zeros(1, T+1);      % Inventory
-x2 = zeros(1, T+1);      % Degradation
+x1 = zeros(1, T+1);      
+x2 = zeros(1, T+1);      
 x3 = zeros(1, T+1);
 x4 = zeros(1,T+1);
-u1 = zeros(1, T);        % Control input
+u1 = zeros(1, T);        
 u2 = zeros(1, T);
-x1(1) = 1.08;            % Initial inventory
-x2(1) = ((0.0165 + (a2/a1)*(0.25))/1.0)-0.0165;               % Initial degradation
+x1(1) = 1.08;            
+x2(1) = ((0.0165 + (a2/a1)*(0.25))/x1(1))-0.0165;        
 x3(1) = 0;
 x4(1) = 0;
 
@@ -100,5 +100,3 @@ xlabel('Time Step');
 ylabel('IV Insulin $u2(t)$', 'Interpreter', 'latex', 'FontSize', 16);
 title('IV Insulin Over Time', 'Interpreter', 'latex', 'FontSize', 16);
 grid on;
-
-

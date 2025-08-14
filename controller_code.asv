@@ -9,7 +9,7 @@ a5 = 3.15*10^-8;
 a6 = 2.8*10^3;
 
 % Equilibrium point (upright)
-x_bar1 = 0.95;
+x_bar1 = 1.08;
 x_bar3 = 0.3;
 x_bar2 = (a2*x_bar3)/a1;
 x_bar4 = (a5*x_bar3)/a6;
@@ -56,16 +56,7 @@ C = [1, 0, 0, 0];
 D = [0, 0];
 
 % Controllability Check
-n = size(A, 1);
-Ctrl = B;
-for i = 1:n-1
-    Ctrl = [Ctrl A^i*B];
-end
-Ctrl_rank = rank(Ctrl);
-disp('Controllability Matrix:');
-disp(Ctrl);
-disp('Controllability Matrix Rank:');
-disp(Ctrl_rank);
+Ctrl = [B ]
 
 % Controller and observer gains
 K = place(A, B, [0.3, 0.4, 0.5, 0.6]); 

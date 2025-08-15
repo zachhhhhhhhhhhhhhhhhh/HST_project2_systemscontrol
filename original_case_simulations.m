@@ -2,7 +2,7 @@
 clear; clc; close all;
 
 % Parameters
-T = 500;                   % Total simulation time (in minutes)
+T = 100;                   % Total simulation time (in minutes)
 k0 = 0.0165;              % Insulin-independent fractional removal rate
 a1 = 0.394;                   % a1 - a6 parameters
 a2 = 0.142;                 
@@ -13,7 +13,7 @@ a6 = 2.8*10^3*(7*10^-6);
 
 % Equilibrium point (upright)
 x_bar1 = 0.95;
-x_bar3 = 0.03;
+x_bar3 = 0.3;
 x_bar2 = (a2*x_bar3)/a1;
 x_bar4 = (a5*x_bar3)/a6;
 x_bar = [x_bar1;
@@ -36,67 +36,33 @@ disp('Eigenvalues of the matrix A:');
 disp(eigenvalues);
 
 % Initial states
-x1 = zeros(1, T+1);      
-x2 = zeros(1, T+1);      
-x3 = zeros(1, T+1);
-x4 = zeros(1,T+1);
-u1 = zeros(1, T);        
-u2 = zeros(1, T);
-x1(1) = 5;            
-x3(1) = 0.00003;
-x2(1) = ((0.0165 + (a2/a1)*(x3(1)))/x1(1))-0.0165;        
-x4(1) = 0.00006;
+x = zeros(4, T+1);
+x(:,1) = [1.08, ((0.0165 + (a2/a1)*(x(3)))/1.08)-0.0165, 0, 0];
+u = zeros(2, T);
 
 % Simulation loop
 for t = 1:T
-    u1(t) = 0.0165 + (a2/a1)*(x3(t));   % IV Glucose input rate
-    u2(t) = (a3 + a2*a3*a4 + a5)*(x3(t));                  % IV Insulin input rate
-    x1(t+1) = x1(t) - (k0+x2(t))*x1(t) + u1(t);           % Glucose Concentration
-    x2(t+1) = x2(t) - a1*x2(t) + a3*x3(t);                  % k(t)
-    x3(t+1) = x3(t) - a3*x3(t) + a4*x4(t) + a6*x4(t) + u2(t); % i(t)
-    x4(t+1) = x4(t) - a6*x4(t) +a5*x3(t);                   % i3(t)
+    x(1,t+1) = x(1,t) - (k0+x(2,t))*x(1,t) + u(1,t);           % Glucose Concentration
+    x(2,t+1) = x(2,t) - a1*x(2,t) + a3*x(3,t);                  % k(t)
+    x(3,t+1) = x(3,t) - a3*x(3,t) + a4*x(4,t) + a6*x(4,t) + u(2,t); % i(t)
+    x(4,t+1) = x(4,t) - a6*x(4,t) +a5*x(3,t);                   % i3(t)
 end
 
 % Plotting
 figure;
-subplot(1, 6, 1);
-plot(0:T, x1, 'b-', 'LineWidth', 2);
-xlabel('Time Step');
-ylabel('[Glucose] $x_1(t)$', 'Interpreter', 'latex', 'FontSize', 16);
-title('[Glucose] Over Time', 'Interpreter', 'latex', 'FontSize', 16);
-grid on;
 
-subplot(1, 6, 2);
-plot(0:T, x2, 'Color', [1 0.4 0], 'LineWidth', 2);
-xlabel('Time Step');
-ylabel('k(t) $x_2(t)$', 'Interpreter', 'latex', 'FontSize', 16);
-title('k(t) Over Time', 'Interpreter', 'latex', 'FontSize', 16);
+plot(0:T, x(1,:), '-', 'LineWidth', 3, 'DisplayName', '$x_1(t)$');
+hold on;
+plot(0:T, x(2,:), '-', 'LineWidth', 3, 'DisplayName', '$x_2(t)$');
+plot(0:T, x(3,:), '-', 'LineWidth', 3, 'DisplayName', '$x_3(t)$');
+plot(0:T, x(4,:), '-', 'LineWidth', 3, 'DisplayName', '$x_4(t)$');
+yline(x_bar(1), '--', 'LineWidth', 2, 'HandleVisibility', 'off');
+yline(x_bar(2), '--', 'LineWidth', 2, 'HandleVisibility', 'off');
+yline(x_bar(3), '--', 'LineWidth', 2, 'HandleVisibility', 'off');
+yline(x_bar(4), '--', 'LineWidth', 2, 'HandleVisibility', 'off');
+xlabel('Time Step $t$', 'FontSize', 28, 'Interpreter', 'on');
+ylabel('State Components $x_i(t)$', 'FontSize', 28, 'Interpreter', 'latex');
+title('State Convergence to $x_f$ from $x_0$', 'FontSize', 32, 'Interpreter', 'latex');
+legend('FontSize', 24, 'Interpreter', 'latex', 'Location', 'best');
 grid on;
-
-subplot(1, 6, 3);
-plot(0:T, x3, 'Color', [1 0.4 0], 'LineWidth', 2);
-xlabel('Time Step');
-ylabel('i(t) $x_3(t)$', 'Interpreter', 'latex', 'FontSize', 16);
-title('i(t) Over Time', 'Interpreter', 'latex', 'FontSize', 16);
-grid on;
-
-subplot(1, 6, 4);
-plot(0:T, x4, 'Color', [1 0.4 0], 'LineWidth', 2);
-xlabel('Time Step');
-ylabel('i3(t) $x_4(t)$', 'Interpreter', 'latex', 'FontSize', 16);
-title('i3(t) Over Time', 'Interpreter', 'latex', 'FontSize', 16);
-grid on;
-
-subplot(1, 6, 5);
-plot(1:T, u1, 'Color', [1 0.4 0], 'LineWidth', 2);
-xlabel('Time Step');
-ylabel('IV Glucose $u1(t)$', 'Interpreter', 'latex', 'FontSize', 16);
-title('IV Glucose Input Over Time', 'Interpreter', 'latex', 'FontSize', 16);
-grid on;
-
-subplot(1, 6, 6);
-plot(1:T, u2,'Color', [1 0.4 0], 'LineWidth', 2);
-xlabel('Time Step');
-ylabel('IV Insulin $u2(t)$', 'Interpreter', 'latex', 'FontSize', 16);
-title('IV Insulin Over Time', 'Interpreter', 'latex', 'FontSize', 16);
-grid on;
+set(gca, 'FontSize', 24);

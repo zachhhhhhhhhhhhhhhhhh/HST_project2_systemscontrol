@@ -5,8 +5,8 @@ a1 = 0.394;                   % a1 - a6 parameters
 a2 = 0.142;                 
 a3 = 0.251;
 a4 = 0.394;
-a5 = (3.15*10^-8)*(7*10^-6);
-a6 = 2.8*10^3*(7*10^-6);
+a5 = (3.15*10^-8)*(7.5*10^-6);
+a6 = 2.8*10^3*(7.5*10^-6);
 
 % Equilibrium point (upright)
 x_bar1 = 0.95;
@@ -36,11 +36,11 @@ ubar = B \ ((eye(4) - A) * xf);
 residual = norm((eye(4) - A) * xf - B * ubar);  % Optional check
 
 % Feedback design
-P_test = [0.9, 0.7, 0.5, 0.4];
+P_test = [0.9, 0.8, 0.7, 0.6];
 K = place(A, B, P_test); 
 
 % Simulation parameters
-T = 60;
+T = 180;
 % Initial states
 %x1 = zeros(1, T+1);      
 %x2 = zeros(1, T+1);      
@@ -54,12 +54,12 @@ T = 60;
 %x4(1) = 0;
 
 x = zeros(4, T+1);
-x(:,1) = [1.08, ((0.0165 + (a2/a1)*(0.25))/1.08)-0.0165, 0, 0];
+x(:,1) = [1.081, ((0.01651 + (a2/a1)*(x(3)))/1.08)-0.0165, 0, 0];
 u = zeros(2, T);
 
 % Simulation loop
 for t = 1:T
-    u(:,t) = ubar - K * (x(:,t) - x_bar);
+    u(:,t) = ubar - K * (x(:,t) - xf);
     x(:,t+1) = A * x(:,t) + B * u(:,t);
 end
 

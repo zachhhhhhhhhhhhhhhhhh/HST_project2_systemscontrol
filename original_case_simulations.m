@@ -37,15 +37,18 @@ disp(eigenvalues);
 
 % Initial states
 x = zeros(4, T+1);
-x(:,1) = [1.08, ((0.0165 + (a2/a1)*(x(3)))/1.08)-0.0165, 0, 0];
+x(:,1) = [1.08, ((0.0165 + (a2/a1)*(x(3)))/1.08)-0.0165, 0.3, 0];
 u = zeros(2, T);
+u(:,1) = [x(1,1)*(k0+x(2,1)), (a3 + a2*a3*a4 + a5)*(x(3,1))];
 
 % Simulation loop
 for t = 1:T
+    y(t) = x(1,t);
     x(1,t+1) = x(1,t) - (k0+x(2,t))*x(1,t) + u(1,t);           % Glucose Concentration
     x(2,t+1) = x(2,t) - a1*x(2,t) + a3*x(3,t);                  % k(t)
     x(3,t+1) = x(3,t) - a3*x(3,t) + a4*x(4,t) + a6*x(4,t) + u(2,t); % i(t)
     x(4,t+1) = x(4,t) - a6*x(4,t) +a5*x(3,t);                   % i3(t)
+
 end
 
 % Plotting

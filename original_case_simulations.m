@@ -2,7 +2,7 @@
 clear; clc; close all;
 
 % Parameters
-T = 100;                   % Total simulation time (in minutes)
+T = 180;                   % Total simulation time (in minutes)
 k0 = 0.0165;              % Insulin-independent fractional removal rate
 a1 = 0.394;                   % a1 - a6 parameters
 a2 = 0.142;                 
@@ -22,33 +22,22 @@ x_bar = [x_bar1;
          x_bar4]; 
 u_bar = [x_bar1*(k0+x_bar2);
          (a3 + a2*a3*a4 + a5)*(x_bar3)];
-y_bar = x_bar1; 
+y_bar = x_bar1;  
 
-% Define your matrix A here
-A = [1-(k0+x_bar2), -(x_bar1), 0, 0; 
-     0, 1-a1, a2, 0; 
-     0, a4, 1-a3, a6; 
-     0, 0, a5, 1-a6]; % Replace with your actual matrix definition
-
-% Calculate and print the eigenvalues
-eigenvalues = eig(A);
-disp('Eigenvalues of the matrix A:');
-disp(eigenvalues);
-
-% Initial states
+% Initial states (t=0)
 x = zeros(4, T+1);
-x(:,1) = [1.08, ((0.0165 + (a2/a1)*(x(3)))/1.08)-0.0165, 0.3, 0];
+x(:,1) = [0.95, ((0.0165 + (a2/a1)*(x(3)))/0.95)-0.0165, 0.3, 0];
 u = zeros(2, T);
 u(:,1) = [x(1,1)*(k0+x(2,1)), (a3 + a2*a3*a4 + a5)*(x(3,1))];
+y = zeros(1, T+1);
+y(:,1) = x(1);
 
 % Simulation loop
-for t = 1:T
-    y(t) = x(1,t);
+for t = 1:T 
     x(1,t+1) = x(1,t) - (k0+x(2,t))*x(1,t) + u(1,t);           % Glucose Concentration
-    x(2,t+1) = x(2,t) - a1*x(2,t) + a3*x(3,t);                  % k(t)
-    x(3,t+1) = x(3,t) - a3*x(3,t) + a4*x(4,t) + a6*x(4,t) + u(2,t); % i(t)
-    x(4,t+1) = x(4,t) - a6*x(4,t) +a5*x(3,t);                   % i3(t)
-
+    x(2,t+1) = x(2,t) - a1*x(2,t) + a2*x(3,t);                  % k(t)
+    x(3,t+1) = x(3,t) - a3*x(3,t) + a4*x(2,t) + a6*x(4,t) + u(2,t); % i(t)
+    x(4,t+1) = x(4,t) - a6*x(4,t) + a5*x(3,t);                   % i3(t)
 end
 
 % Plotting
@@ -63,9 +52,9 @@ yline(x_bar(1), '--', 'LineWidth', 2, 'HandleVisibility', 'off');
 yline(x_bar(2), '--', 'LineWidth', 2, 'HandleVisibility', 'off');
 yline(x_bar(3), '--', 'LineWidth', 2, 'HandleVisibility', 'off');
 yline(x_bar(4), '--', 'LineWidth', 2, 'HandleVisibility', 'off');
-xlabel('Time Step $t$', 'FontSize', 28, 'Interpreter', 'on');
+xlabel('Time Step $t$', 'FontSize', 28, 'Interpreter', 'latex');
 ylabel('State Components $x_i(t)$', 'FontSize', 28, 'Interpreter', 'latex');
-title('State Convergence to $x_f$ from $x_0$', 'FontSize', 32, 'Interpreter', 'latex');
+title('Nonlinear System Simulation', 'FontSize', 32, 'Interpreter', 'latex');
 legend('FontSize', 24, 'Interpreter', 'latex', 'Location', 'best');
 grid on;
 set(gca, 'FontSize', 24);

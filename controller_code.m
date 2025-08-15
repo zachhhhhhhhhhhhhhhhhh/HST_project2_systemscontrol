@@ -5,8 +5,8 @@ a1 = 0.394;                   % a1 - a6 parameters
 a2 = 0.142;                 
 a3 = 0.251;
 a4 = 0.394;
-a5 = 3.15*10^-8;
-a6 = 2.8*10^3;
+a5 = (3.15*10^-8)*(7*10^-6);
+a6 = 2.8*10^3*(7*10^-6);
 
 % Equilibrium point (upright)
 x_bar1 = 0.95;
@@ -68,14 +68,12 @@ disp('Controllability Matrix Rank:');
 disp(Ctrl_rank);
 
 % Controller and observer gains
-K = place(A, B, [0.3, 0.4, 0.5, 0.6]); 
+P_test = [0.9, 0.7, 0.5, 0.4];
+K = place(A, B, P_test); 
 L = place(A', C', [0.02, 0.025, 0.03, 0.035])'; 
 
 % Observer initial condition (estimate of incremental state)
 xhat = zeros(4, T+1);  
-
-% Control input
-u = zeros(2, T+1); 
 
 % Simulation loop
 for t = 1:T
@@ -83,25 +81,26 @@ for t = 1:T
     x_t = [x1(t); x2(t); x3(t); x4(t)];       
 
     % Output of nonlinear system
-    y_t = [x1(t); x3(t)];          
+    y_t = [x1(t)];          
 
     % Compute incremental signals
     y_tilde = y_t - y_bar; 
-    u_tilde = u(t) - u_bar;       
+    u1_tilde = u1(t) - u_bar(1);
+    u2_tilde = u2(t) - u_bar(2);
 
     % Control input at time t (uses current observer state)
     u_tilde = -K * xhat(:, t); 
-    u(t) = u_bar + u_tilde;       
+    u1(t) = u_bar(1) + u1_tilde;
+    u2(t) = u_bar(2) + u2_tilde;
 
     % Observer update
     xhat(:, t+1) = A * xhat(:, t) + B * u_tilde + L * (y_tilde - C * xhat(:, t) - D * u_tilde);       
 
-    % Nonlinear system dynamics
-    d = 1 + sin(x3(t))^2;       
-    x1(t+1) = x1(t) + x2(t); 
-    x2(t+1) = x2(t) + (1/d) * (u(t) + sin(x3(t)) * x4(t)^2 - g * sin(x3(t)) * cos(x3(t))); 
-    x3(t+1) = x3(t) + x4(t); 
-    x4(t+1) = x4(t) + (1/d) * (-u(t) * cos(x3(t)) - sin(x3(t)) * cos(x3(t)) * x4(t)^2 + 2 * g * sin(x3(t))); 
+    % Nonlinear system dynamics       
+    x1(t+1) = x1(t) - (k0+x2(t))*x1(t) + u1(t);           % Glucose Concentration
+    x2(t+1) = x2(t) - a1*x2(t) + a3*x3(t);                  % k(t)
+    x3(t+1) = x3(t) - a3*x3(t) + a4*x4(t) + a6*x4(t) + u2(t); % i(t)
+    x4(t+1) = x4(t) - a6*x4(t) +a5*x3(t);                   % i3(t)
 end   
 
 % Plotting
@@ -130,9 +129,12 @@ ylabel('$x_4(t)$', 'Interpreter', 'latex', 'FontSize', 20);
 ylim([-0.06 0.06]); 
 
 subplot(5, 1, 5);  
-plot(time, u, 'r', 'LineWidth', 1.5); hold on; 
-yline(u_bar, '--k', 'LineWidth', 2); 
-ylabel('$u(t)$', 'Interpreter', 'latex', 'FontSize', 20); 
-xlabel('Time step', 'FontSize', 13); 
+time_u = 0:T-1;  % match u1
+plot(time_u, u1, 'r', 'LineWidth', 1.5); hold on; 
+yline(u_bar(1), '--k', 'LineWidth', 2); 
+ylabel('$u_1(t)$', 'Interpreter', 'latex', 'FontSize', 20); 
+xlabel('Time step', 'FontSize', 13);
+plot(time_u, u2, 'b', 'LineWidth', 1.5);
+yline(u_bar(2), '--k', 'LineWidth', 2);
 
 sgtitle('Linear Observer-Based Control for Nonlinear System. Solid blue: states. Black dashed: equilibrium.', 'FontSize', 15);

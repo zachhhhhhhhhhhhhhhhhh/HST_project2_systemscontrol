@@ -2,14 +2,14 @@
 clear; clc; close all;
 
 % Parameters
-T = 360;                   % Total simulation time (in minutes)
+T = 500;                   % Total simulation time (in minutes)
 k0 = 0.0165;              % Insulin-independent fractional removal rate
 a1 = 0.394;                   % a1 - a6 parameters
 a2 = 0.142;                 
 a3 = 0.251;
 a4 = 0.394;
-a5 = 3.15*10^-8;
-a6 = 2.8*10^3;
+a5 = (3.15*10^-8)*(7*10^-6);
+a6 = 2.8*10^3*(7*10^-6);
 
 % Equilibrium point (upright)
 x_bar1 = 0.95;
@@ -42,10 +42,10 @@ x3 = zeros(1, T+1);
 x4 = zeros(1,T+1);
 u1 = zeros(1, T);        
 u2 = zeros(1, T);
-x1(1) = 1.08;            
-x2(1) = ((0.0165 + (a2/a1)*(0.25))/x1(1))-0.0165;        
-x3(1) = 0;
-x4(1) = 0;
+x1(1) = 5;            
+x3(1) = 0.00003;
+x2(1) = ((0.0165 + (a2/a1)*(x3(1)))/x1(1))-0.0165;        
+x4(1) = 0.00006;
 
 % Simulation loop
 for t = 1:T

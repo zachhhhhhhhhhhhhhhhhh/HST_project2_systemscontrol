@@ -55,6 +55,11 @@ B = [1, 0;
 C = [1, 0, 0, 0]; 
 D = [0, 0];
 
+% Observability check
+O = obsv(A,C);
+assert(rank(O) == size(A,1), "System not fully observable");
+
+
 % Controllability Check
 n = size(A, 1);
 Ctrl = B;
@@ -72,6 +77,11 @@ P_test = [0.9, 0.7, 0.5, 0.4];
 K = place(A, B, P_test); 
 L = place(A', C', [0.02, 0.025, 0.03, 0.035])'; 
 
+% Observer Matrix
+A_obs = A - L*C;
+disp('Eigenvalues of observer: ');
+disp(eig(A_obs))
+
 % Observer initial condition (estimate of incremental state)
 xhat = zeros(4, T+1);  
 
@@ -83,15 +93,16 @@ for t = 1:T
     % Output of nonlinear system
     y_t = [x1(t)];          
 
-    % Compute incremental signals
-    y_tilde = y_t - y_bar; 
-    u1_tilde = u1(t) - u_bar(1);
-    u2_tilde = u2(t) - u_bar(2);
+    % Incremental measurement
+    y_tilde = y_t - y_bar;
 
-    % Control input at time t (uses current observer state)
-    u_tilde = -K * xhat(:, t); 
-    u1(t) = u_bar(1) + u1_tilde;
-    u2(t) = u_bar(2) + u2_tilde;
+    % Control input
+    u_tilde = -K * xhat(:, t);      
+
+    % Apply absolute control to the nonlinear plant
+    u1(t) = u_bar(1) + u_tilde(1);
+    u2(t) = u_bar(2) + u_tilde(2);
+
 
     % Observer update
     xhat(:, t+1) = A * xhat(:, t) + B * u_tilde + L * (y_tilde - C * xhat(:, t) - D * u_tilde);       

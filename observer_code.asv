@@ -42,15 +42,6 @@ eigenvalues = eig(A);
 disp('Eigenvalues of the matrix A:');
 disp(eigenvalues);
 
-% Initial states
-x = zeros(4, T+1);
-% With slight perturbation
-x(:,1) = [0.951, ((0.01651 + (a2/a1)*(x(3)))/0.951)-0.0165, 0.31, 0];
-u = zeros(2, T);
-u(:,1) = [x(1,1)*(k0+x(2,1)), (a3 + a2*a3*a4 + a5)*(x(3,1))];
-y = zeros(1, T+1);
-y(:,1) = x(1);
-
 % Observability check
 O = obsv(A,C);
 assert(rank(O) == size(A,1), "System not fully observable");
@@ -70,8 +61,8 @@ disp(Ctrl_rank);
 % Controller and observer gains
 P_test = [0.7, 0.85, 0.9, 0.8];
 K = place(A, B, P_test);
-L_Eigen = [0.02, 0.025, 0.03, 0.035];
-L = place(A', C', L_eigen)'; 
+L_Eigen = [0.3, 0.4, 0.5, 0.6];
+L = place(A', C', L_Eigen)'; 
 
 % Observer Matrix
 A_obs = A - L*C;
@@ -80,6 +71,16 @@ disp(eig(A_obs))
 
 % Observer initial condition (estimate of incremental state)
 xhat = zeros(4, T+1);  
+
+% Initial states
+% True System
+x = zeros(4, T+1);
+x(:,1) = [0.951, ((0.01651 + (a2/a1)*(x(3)))/0.951)-0.0165, 0.31, 0];
+u = zeros(2, T);
+u(:,1) = [x(1,1)*(k0+x(2,1)), (a3 + a2*a3*a4 + a5)*(x(3,1))];
+y = zeros(1, T+1);
+y(:,1) = x(1);
+
 
 % Simulation loop
 for t = 1:T
@@ -109,6 +110,16 @@ for t = 1:T
     x3(t+1) = x3(t) - a3*x3(t) + a4*x4(t) + a6*x4(t) + u2(t); % i(t)
     x4(t+1) = x4(t) - a6*x4(t) +a5*x3(t);                   % i3(t)
 end   
+
+%% Simulate true system + observer 
+for t = 1:T 
+    % True system 
+    x_true(:,t+1) = A * x_true(:,t) + B * u(t); 
+    y(t+1) = C * x_true(:,t+1) + D * u(t+1); 
+    % Observer 
+    x_hat(:,t+1) = A * x_hat(:,t) + B * u(t) + L * ( y(t) - y_hat(t) );
+    y_hat(t+1) = C * x_hat(:,t+1) + D * u(t+1); 
+end 
 
 % Plotting
 time = 0:T; 

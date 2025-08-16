@@ -1,5 +1,4 @@
 % Parameters
-T = 60;                   % Total simulation time (in minutes)
 k0 = 0.0165;              % Insulin-independent fractional removal rate
 a1 = 0.394;                   % a1 - a6 parameters
 a2 = 0.142;                 
@@ -13,7 +12,6 @@ x_bar1 = 0.95;
 x_bar3 = 0.3;
 x_bar2 = (a2*x_bar3)/a1;
 x_bar4 = (a5*x_bar3)/a6;
-
 x_bar = [x_bar1;
          x_bar2;
          x_bar3;
@@ -21,14 +19,23 @@ x_bar = [x_bar1;
 
 u_bar = [x_bar1*(k0+x_bar2);
          (a3 + a2*a3*a4 + a5)*(x_bar3)];
-
 y_bar = x_bar1; 
 
-% Define your matrix A here
+% A and B Matrix Formation (Jacobian Linearisation Matrix)
 A = [1-(k0+x_bar2), -(x_bar1), 0, 0; 
      0, 1-a1, a2, 0; 
      0, a4, 1-a3, a6; 
      0, 0, a5, 1-a6];
+
+B = [1, 0; 
+     0, 0;
+     0, 1;
+     0, 0];
+
+C = [1, 0, 0, 0];
+
+D = [0, 0];
+
 
 % Calculate and print the eigenvalues
 eigenvalues = eig(A);
@@ -36,29 +43,17 @@ disp('Eigenvalues of the matrix A:');
 disp(eigenvalues);
 
 % Initial states
-x1 = zeros(1, T+1);      % Inventory
-x2 = zeros(1, T+1);      % Degradation
-x3 = zeros(1, T+1);
-x4 = zeros(1,T+1);
-u1 = zeros(1, T);        % Control input
-u2 = zeros(1, T);
-x1(1) = 1.08;            % Initial inventory
-x2(1) = ((0.0165 + (a2/a1)*(0.25))/1.0)-0.0165;               % Initial degradation
-x3(1) = 0;
-x4(1) = 0;
-
-% Linearized system matrices at ()
-B = [1, 0; 
-     0, 0;
-     0, 1;
-     0, 0]; 
-C = [1, 0, 0, 0]; 
-D = [0, 0];
+x = zeros(4, T+1);
+% With slight perturbation
+x(:,1) = [0.951, ((0.01651 + (a2/a1)*(x(3)))/0.951)-0.0165, 0.31, 0];
+u = zeros(2, T);
+u(:,1) = [x(1,1)*(k0+x(2,1)), (a3 + a2*a3*a4 + a5)*(x(3,1))];
+y = zeros(1, T+1);
+y(:,1) = x(1);
 
 % Observability check
 O = obsv(A,C);
 assert(rank(O) == size(A,1), "System not fully observable");
-
 
 % Controllability Check
 n = size(A, 1);
@@ -73,9 +68,10 @@ disp('Controllability Matrix Rank:');
 disp(Ctrl_rank);
 
 % Controller and observer gains
-P_test = [0.9, 0.7, 0.5, 0.4];
-K = place(A, B, P_test); 
-L = place(A', C', [0.02, 0.025, 0.03, 0.035])'; 
+P_test = [0.7, 0.85, 0.9, 0.8];
+K = place(A, B, P_test);
+L_Eigen = [0.02, 0.025, 0.03, 0.035];
+L = place(A', C', L_eigen)'; 
 
 % Observer Matrix
 A_obs = A - L*C;
@@ -117,29 +113,24 @@ end
 % Plotting
 time = 0:T; 
 figure; 
-
-subplot(5, 1, 1);  
+  
 plot(time, x1, 'b', 'LineWidth', 1.5); hold on; 
 yline(x_bar(1), '--k', 'LineWidth', 2);  
 ylabel('$x_1(t)$', 'Interpreter', 'latex', 'FontSize', 20); 
 
-subplot(5, 1, 2);  
 plot(time, x2, 'b', 'LineWidth', 1.5); hold on; 
 yline(x_bar(2), '--k', 'LineWidth', 2);  
 ylabel('$x_2(t)$', 'Interpreter', 'latex', 'FontSize', 20); 
 
-subplot(5, 1, 3);  
 plot(time, x3, 'b', 'LineWidth', 1.5); hold on; 
 yline(x_bar(3), '--k', 'LineWidth', 2);  
 ylabel('$x_3(t)$', 'Interpreter', 'latex', 'FontSize', 20); 
 
-subplot(5, 1, 4);  
 plot(time, x4, 'b', 'LineWidth', 1.5); hold on; 
 yline(x_bar(4), '--k', 'LineWidth', 2);  
 ylabel('$x_4(t)$', 'Interpreter', 'latex', 'FontSize', 20); 
 ylim([-0.06 0.06]); 
 
-subplot(5, 1, 5);  
 time_u = 0:T-1;  % match u1
 plot(time_u, u1, 'r', 'LineWidth', 1.5); hold on; 
 yline(u_bar(1), '--k', 'LineWidth', 2); 

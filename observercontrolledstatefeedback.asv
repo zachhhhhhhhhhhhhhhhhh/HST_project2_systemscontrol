@@ -1,0 +1,116 @@
+
+% Parameters
+k0 = 0.0165;              % Insulin-independent fractional removal rate
+a1 = 0.394;                   % a1 - a6 parameters
+a2 = 0.142;                 
+a3 = 0.251;
+a4 = 0.394;
+a5 = (3.15*10^-8)*(7.5*10^-6);
+a6 = 2.8*10^3*(7.5*10^-6);
+
+% Equilibrium point (upright)
+x_bar1 = 0.95;
+x_bar3 = 0.3;
+x_bar2 = (a2*x_bar3)/a1;
+x_bar4 = (a5*x_bar3)/a6;
+x_bar = [x_bar1;
+         x_bar2;
+         x_bar3;
+         x_bar4]; 
+
+u_bar = [x_bar1*(k0+x_bar2);
+         (a3 + a2*a3*a4 + a5)*(x_bar3)];
+y_bar = x_bar1; 
+
+% A and B Matrix Formation (Jacobian Linearisation Matrix)
+A = [1-(k0+x_bar2), -(x_bar1), 0, 0; 
+     0, 1-a1, a2, 0; 
+     0, a4, 1-a3, a6; 
+     0, 0, a5, 1-a6];
+
+B = [1, 0; 
+     0, 0;
+     0, 1;
+     0, 0];
+
+C = [1, 0, 0, 0];
+
+D = [0, 0];   
+
+%% Gains
+L = [1.4000; 7.1000; 15.4000; 12.0000]; 
+K = [0.0000 0.6000 0.5000 0.1000];   
+
+%% Desired equilibrium
+x_bar = [6.875; 3.75; 7.5; 5]; 
+ubar = 1;   
+
+%% Simulation settings
+T = 20; 
+x_true = zeros(4, T+1); 
+x_hat  = zeros(4, T+1);   
+
+% Initial conditions
+x_true(:,1) = [2; -1; 0; 0]; 
+x_hat(:,1)  = [0; 0; 0; 0];   
+
+y     = zeros(1, T+1); 
+y_hat = zeros(1, T+1); 
+u     = zeros(1, T);   
+
+% Initial outputs
+y(1)     = C * x_true(:,1); 
+y_hat(1) = C * x_hat(:,1);   
+
+%% Simulate closed-loop system with observer-based control
+for t = 1:T     
+    % Pure regulation control: no extra input     
+    u(t) = ubar - K * ( x_hat(:,t) - x_bar );       
+
+    % True system     
+    x_true(:,t+1) = A * x_true(:,t) + B * u(t);     
+    y(t+1)        = C * x_true(:,t+1);       
+
+    % Observer update     
+    x_hat(:,t+1) = A * x_hat(:,t) + B * u(t) + L * ( y(t) - y_hat(t) );     
+    y_hat(t+1)   = C * x_hat(:,t+1); 
+end   
+
+%% Figure 1: True vs Estimated States
+figure; 
+plot(0:T, x_true(1,:), '-', 'LineWidth', 3, 'DisplayName', 'True $x_1(t)$'); hold on; 
+plot(0:T, x_true(2,:), '-', 'LineWidth', 3, 'DisplayName', 'True $x_2(t)$'); 
+plot(0:T, x_true(3,:), '-', 'LineWidth', 3, 'DisplayName', 'True $x_3(t)$'); 
+plot(0:T, x_true(4,:), '-', 'LineWidth', 3, 'DisplayName', 'True $x_4(t)$');   
+
+plot(0:T, x_hat(1,:), '--', 'LineWidth', 3, 'DisplayName', 'Estimated $\hat{x}_1(t)$'); 
+plot(0:T, x_hat(2,:), '--', 'LineWidth', 3, 'DisplayName', 'Estimated $\hat{x}_2(t)$'); 
+plot(0:T, x_hat(3,:), '--', 'LineWidth', 3, 'DisplayName', 'Estimated $\hat{x}_3(t)$'); 
+plot(0:T, x_hat(4,:), '--', 'LineWidth', 3, 'DisplayName', 'Estimated $\hat{x}_4(t)$');   
+
+xlabel('Time Step $t$', 'FontSize', 28, 'Interpreter', 'latex'); 
+ylabel('States and Estimates', 'FontSize', 28, 'Interpreter', 'latex'); 
+title('Observer-Based Regulation: True vs. Estimated States', 'FontSize', 32, 'Interpreter', 'latex'); 
+legend('FontSize', 24, 'Interpreter', 'latex', 'Location', 'best'); 
+grid on; 
+set(gca, 'FontSize', 24);   
+
+%% Figure 2: True States vs Desired x_bar
+figure; 
+plot(0:T, x_true(1,:), '-', 'LineWidth', 3, 'DisplayName', '$x_1(t)$'); hold on; 
+plot(0:T, x_true(2,:), '-', 'LineWidth', 3, 'DisplayName', '$x_2(t)$'); 
+plot(0:T, x_true(3,:), '-', 'LineWidth', 3, 'DisplayName', '$x_3(t)$'); 
+plot(0:T, x_true(4,:), '-', 'LineWidth', 3, 'DisplayName', '$x_4(t)$');   
+
+% Plot x_bar lines 
+yline(x_bar(1), '--', 'LineWidth', 2, 'DisplayName', '$\bar{x}_1$'); 
+yline(x_bar(2), '--', 'LineWidth', 2, 'DisplayName', '$\bar{x}_2$'); 
+yline(x_bar(3), '--', 'LineWidth', 2, 'DisplayName', '$\bar{x}_3$'); 
+yline(x_bar(4), '--', 'LineWidth', 2, 'DisplayName', '$\bar{x}_4$');   
+
+xlabel('Time Step $t$', 'FontSize', 28, 'Interpreter', 'latex'); 
+ylabel('States vs. Target', 'FontSize', 28, 'Interpreter', 'latex'); 
+title('Observer-Based Regulation: States Converging to $\bar{x}$', 'FontSize', 32, 'Interpreter', 'latex'); 
+legend('FontSize', 24, 'Interpreter', 'latex', 'Location', 'best'); 
+grid on; 
+set(gca, 'FontSize', 24);

@@ -80,7 +80,7 @@ y(:, 1) = C*x(:,1) + D*u(:,1);
 
 % Estimators 
 x_hat = zeros(4, T+1);
-x_hat(:, 1) = [0; 0; 0; 0];
+x_hat(:, 1) = x_bar;
 y_hat = zeros(1, T+1);
 y_hat(:,1) = C*x_hat(:,1) + D*u(:,1);
 

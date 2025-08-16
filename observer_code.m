@@ -61,7 +61,7 @@ disp(Ctrl_rank);
 % Controller and observer gains
 P_test = [0.7, 0.85, 0.9, 0.8];
 K = place(A, B, P_test);
-L_Eigen = [0.49,0.7225,0.81,0.64];
+L_Eigen = [0.49,0.3,0.81,0.64];
 L = place(A', C', L_Eigen)'; 
 
 % Observer Matrix

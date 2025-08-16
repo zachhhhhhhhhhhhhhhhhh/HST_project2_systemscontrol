@@ -1,6 +1,6 @@
 
 % Parameters
-k0 = 0.0165;              % Insulin-independent fractional removal rate
+k0 = 0.0165;                  % Insulin-independent fractional removal rate
 a1 = 0.394;                   % a1 - a6 parameters
 a2 = 0.142;                 
 a3 = 0.251;
@@ -8,17 +8,17 @@ a4 = 0.394;
 a5 = (3.15*10^-8)*(7.5*10^-6);
 a6 = 2.8*10^3*(7.5*10^-6);
 
-% Equilibrium point (upright)
+% Equilibrium point (upright) that is linearised about
 x_bar1 = 0.95;
 x_bar3 = 0.3;
 x_bar2 = (a2*x_bar3)/a1;
 x_bar4 = (a5*x_bar3)/a6;
-x_bar = [x_bar1;
+x_eqm = [x_bar1;
          x_bar2;
          x_bar3;
          x_bar4]; 
 
-u_bar = [x_bar1*(k0+x_bar2);
+u_eqm = [x_bar1*(k0+x_bar2);
          (a3 + a2*a3*a4 + a5)*(x_bar3)];
 y_bar = x_bar1; 
 
@@ -40,59 +40,74 @@ D = [0, 0];
 % Controller and observer gains
 P_test = [0.7, 0.85, 0.9, 0.8];
 K = place(A, B, P_test);
-L_Eigen = [0.49,0.7225,0.81,0.64];
+L_Eigen = [0.4,0.3,0.5,0.64];
 L = place(A', C', L_Eigen)';   
 
-%% Desired equilibrium
-x_f = [0;0;0;0];   
+%% Desired equilibrium 
+% Desired output value 
+y_f = 0;   
+
+% Solve for feasible steady-state pair (x_bar, u_bar) 
+M = [eye(4)-A, -B;
+    C, D]; 
+rhs = [zeros(4,1); y_f]; 
+sol = M \ rhs;   
+x_bar = sol(1:4); 
+u_bar = sol(5:6);   
+
+% Optional residual check 
+residual = M*sol - rhs; 
+norm_residual = norm(residual);  
 
 %% Simulation settings
 T = 180;    
+xhat = zeros(4, T+1); % Observer state initialization
+u = zeros(2, T); % Control input initialization
+y_bar = 0; % Desired output (example value)
 
-% Initial states
-% True System
-x = zeros(4, T+1);
-x(:,1) = [0.951, ((0.01651 + (a2/a1)*(0.31)/0.951))-0.0165, 0.31, 0];
-u = zeros(2, T+1);
-u(:,1) = [x(1,1)*(k0+x(2,1)), (a3 + a2*a3*a4 + a5)*(x(3,1))];
-y = zeros(1, T+1);
-y(:, 1) = C*x(:,1) + D*u(:,1);
+% Initial conditions
+x1 = zeros(1, T+1);
+x2 = zeros(1, T+1);
+x3 = zeros(1, T+1);
+x4 = zeros(1, T+1);
+x1(1) = 0.951; % Initial condition for x1
+x2(1) = ((0.01651 + (a2/a1)*(0.31)/0.951))-0.0165; % Initial condition for x2
+x3(1) = 0.31; % Initial condition for x3
+x4(1) = 0; % Initial condition for x4
 
-% Estimators 
-x_hat = zeros(4, T+1);
-x_hat(:, 1) = x_bar;
-y_hat = zeros(1, T+1);
-y_hat(:,1) = C*x_hat(:,1) + D*u(:,1);
+for t = 1:T
+    % Current state
+    x_t = [x1(t); x2(t); x3(t); x4(t)];
 
-% Initial outputs
-y(1)     = C * x(:,1); 
-y_hat(1) = C * x_hat(:,1);   
+    % Output of nonlinear system
+    y_t = x1(t);
 
-%% Simulate closed-loop system with observer-based control
-for t = 1:T     
-    % Pure regulation control: no extra input     
-    u(:,t) = u_bar - K * ( x_hat(:,t) - x_f );       
+    % Compute incremental signals
+    y_tilde = y_t - y_bar; 
+    u_tilde = u(:,t) - u_bar; 
 
-    % True system     
-    x(:,t+1) = A * x(:,t) + B * u(:,t);     
-    y(t+1)        = C * x(:,t+1);       
+    % Control input at time t (uses current observer state)
+    u_tilde = -K * xhat(:,t); 
+    u(:,t) = u_bar + u_tilde; 
 
-    % Observer update     
-    x_hat(:,t+1) = A * x_hat(:,t) + B * u(:,t) + L * ( y(t) - y_hat(t) );     
-    y_hat(t+1)   = C * x_hat(:,t+1); 
-end   
+    % Observer update
+    xhat(:,t+1) = A * xhat(:,t) + B * u_tilde + L * (y_tilde - C * xhat(:,t));
+
+    % Nonlinear system dynamics
+    x1(t+1) = x1(t) - (k0+x2(t))*x1(t) + u(1,t);           % Glucose Concentration
+    x2(t+1) = x2(t) - a1*x2(t) + a2*x3(t);                  % k(t)
+    x3(t+1) = x3(t) - a3*x3(t) + a4*x2(t) + a6*x4(t) + u(2,t); % i(t)
+    x4(t+1) = x4(t) - a6*x4(t) + a5*x3(t);                   % i3(t); 
+end
 
 %% Figure 1: True vs Estimated States
 figure; 
-plot(0:T, x(1,:), '-', 'LineWidth', 3, 'DisplayName', 'True $x_1(t)$'); hold on; 
-plot(0:T, x(2,:), '-', 'LineWidth', 3, 'DisplayName', 'True $x_2(t)$'); 
-plot(0:T, x(3,:), '-', 'LineWidth', 3, 'DisplayName', 'True $x_3(t)$'); 
-plot(0:T, x(4,:), '-', 'LineWidth', 3, 'DisplayName', 'True $x_4(t)$');   
+plot(0:T, x1(:), '-', 'LineWidth', 3, 'DisplayName', 'True $x_1(t)$'); hold on; 
+plot(0:T, x2(:), '-', 'LineWidth', 3, 'DisplayName', 'True $x_2(t)$'); 
+plot(0:T, x3(:), '-', 'LineWidth', 3, 'DisplayName', 'True $x_3(t)$'); 
+plot(0:T, x4(:), '-', 'LineWidth', 3, 'DisplayName', 'True $x_4(t)$');   
 
-plot(0:T, x_hat(1,:), '--', 'LineWidth', 3, 'DisplayName', 'Estimated $\hat{x}_1(t)$'); 
-plot(0:T, x_hat(2,:), '--', 'LineWidth', 3, 'DisplayName', 'Estimated $\hat{x}_2(t)$'); 
-plot(0:T, x_hat(3,:), '--', 'LineWidth', 3, 'DisplayName', 'Estimated $\hat{x}_3(t)$'); 
-plot(0:T, x_hat(4,:), '--', 'LineWidth', 3, 'DisplayName', 'Estimated $\hat{x}_4(t)$');   
+ 
 
 xlabel('Time Step $t$', 'FontSize', 28, 'Interpreter', 'latex'); 
 ylabel('States and Estimates', 'FontSize', 28, 'Interpreter', 'latex'); 

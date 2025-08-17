@@ -19,7 +19,7 @@ x_bar = [x_bar1;
          x_bar4]; 
 
 u_bar = [x_bar1*(k0+x_bar2);
-         (a3 + a2*a3*a4 + a5)*(x_bar3)];
+         ((a1*a3-a4*a2-a5*a1)*(x_bar3))/a1];
 y_bar = x_bar1; 
 
 % A and B Matrix Formation (Jacobian Linearisation Matrix)
@@ -49,7 +49,7 @@ x = zeros(4, T+1);
 % With slight perturbation
 x(:,1) = [0.951, ((0.01651 + (a2/a1)*(x(3)))/0.951)-0.0165, 0.31, 0];
 u = zeros(2, T);
-u(:,1) = [x(1,1)*(k0+x(2,1)); (a3 + a2*a3*a4 + a5)*(x(3,1))];
+u(:,1) = [x(1,1)*(k0+x(2,1)); ((a1*a3-a4*a2-a5*a1)*(x(3,1)))/a1];
 y = zeros(1, T+1);
 y(:,1) = x(1);
 

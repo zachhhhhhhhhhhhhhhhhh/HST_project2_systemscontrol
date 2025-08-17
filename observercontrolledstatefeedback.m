@@ -19,7 +19,7 @@ x_eqm = [x_bar1;
          x_bar4]; 
 
 u_eqm = [x_bar1*(k0+x_bar2);
-         (a3 + a2*a3*a4 + a5)*(x_bar3)];
+         ((a1*a3-a4*a2-a5*a1)*(x_bar3))/a1];
 y_bar = x_bar1; 
 
 % A and B Matrix Formation (Jacobian Linearisation Matrix)

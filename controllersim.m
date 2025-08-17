@@ -18,7 +18,7 @@ x_bar = [x_bar1;
          x_bar3;
          x_bar4]; 
 
-u_bar = [x_bar1*(k0+x_bar2);
+u_eqm = [x_bar1*(k0+x_bar2);
          (a3 + a2*a3*a4 + a5)*(x_bar3)];
 y_bar = x_bar1; 
 

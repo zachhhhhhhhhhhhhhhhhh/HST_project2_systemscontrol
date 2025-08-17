@@ -40,7 +40,7 @@ D = [0, 0];
 % Controller and observer gains
 P_test = [0.7, 0.85, 0.9, 0.8];
 K = place(A, B, P_test);
-L_Eigen = [0.4,0.3,0.5,0.64];
+L_Eigen = [0.4,0.1,0.5,0.3];
 L = place(A', C', L_Eigen)';   
 
 %% Desired equilibrium 
@@ -70,34 +70,35 @@ x1 = zeros(1, T+1);
 x2 = zeros(1, T+1);
 x3 = zeros(1, T+1);
 x4 = zeros(1, T+1);
-x1(1) = 0.951; % Initial condition for x1
-x2(1) = ((0.01651 + (a2/a1)*(0.31)/0.951))-0.0165; % Initial condition for x2
+x1(1) = 1.081; % Initial condition for x1
+x2(1) = ((0.01651 + (a2/a1)*(0.31)/1.081))-0.0165; % Initial condition for x2
 x3(1) = 0.31; % Initial condition for x3
 x4(1) = 0; % Initial condition for x4
 
+u_const = [0; 0];   % <-- choose your constant feedback input
+
 for t = 1:T
-    % Current state
+    % Current state (nonlinear system)
     x_t = [x1(t); x2(t); x3(t); x4(t)];
+    xhat(:,t) = x_t - x_bar;
 
     % Output of nonlinear system
     y_t = x1(t);
 
-    % Compute incremental signals
+    % Deviation signals
+    u(:,t) = u_const;            % constant feedback
     y_tilde = y_t - y_bar; 
-    u_tilde = u(:,t) - u_bar; 
-
-    % Control input at time t (uses current observer state)
-    u_tilde = -K * xhat(:,t); 
-    u(:,t) = u_bar + u_tilde; 
+    u_tilde = u(:,t) - u_bar;    % deviation input for observer
 
     % Observer update
-    xhat(:,t+1) = A * xhat(:,t) + B * u_tilde + L * (y_tilde - C * xhat(:,t));
+    xhat(:,t+1) = A*xhat(:,t) + B*u_tilde + L*(y_tilde - C*xhat(:,t));
 
-    % Nonlinear system dynamics
-    x1(t+1) = x1(t) - (k0+x2(t))*x1(t) + u(1,t);           % Glucose Concentration
-    x2(t+1) = x2(t) - a1*x2(t) + a2*x3(t);                  % k(t)
-    x3(t+1) = x3(t) - a3*x3(t) + a4*x2(t) + a6*x4(t) + u(2,t); % i(t)
-    x4(t+1) = x4(t) - a6*x4(t) + a5*x3(t);                   % i3(t); 
+    % Nonlinear system dynamics with constant feedback
+    u(:,t) = [0,0];
+    x1(t+1) = x1(t) - (k0+x2(t))*x1(t) + u(1,t);           
+    x2(t+1) = x2(t) - a1*x2(t) + a2*x3(t);                  
+    x3(t+1) = x3(t) - a3*x3(t) + a4*x2(t) + a6*x4(t) + u(2,t); 
+    x4(t+1) = x4(t) - a6*x4(t) + a5*x3(t);                   
 end
 
 %% Figure 1: True vs Estimated States
@@ -107,7 +108,10 @@ plot(0:T, x2(:), '-', 'LineWidth', 3, 'DisplayName', 'True $x_2(t)$');
 plot(0:T, x3(:), '-', 'LineWidth', 3, 'DisplayName', 'True $x_3(t)$'); 
 plot(0:T, x4(:), '-', 'LineWidth', 3, 'DisplayName', 'True $x_4(t)$');   
 
- 
+plot(0:T, xhat(1,:), '--', 'LineWidth', 3, 'DisplayName', 'Estimated $\hat{x}_1(t)$'); 
+plot(0:T, xhat(2,:), '--', 'LineWidth', 3, 'DisplayName', 'Estimated $\hat{x}_2(t)$'); 
+plot(0:T, xhat(3,:), '--', 'LineWidth', 3, 'DisplayName', 'Estimated $\hat{x}_3(t)$'); 
+plot(0:T, xhat(4,:), '--', 'LineWidth', 3, 'DisplayName', 'Estimated $\hat{x}_4(t)$');  
 
 xlabel('Time Step $t$', 'FontSize', 28, 'Interpreter', 'latex'); 
 ylabel('States and Estimates', 'FontSize', 28, 'Interpreter', 'latex'); 

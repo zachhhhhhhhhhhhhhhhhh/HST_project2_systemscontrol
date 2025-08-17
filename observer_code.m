@@ -61,7 +61,7 @@ disp(Ctrl_rank);
 % Controller and observer gains
 P_test = [0.7, 0.85, 0.9, 0.8];
 K = place(A, B, P_test);
-L_Eigen = [0.49,0.3,0.81,0.64];
+L_Eigen = [0.4,0.1,0.5,0.3];
 L = place(A', C', L_Eigen)'; 
 
 % Observer Matrix
@@ -69,10 +69,22 @@ A_obs = A - L*C;
 disp('Eigenvalues of observer: ');
 disp(eig(A_obs))
 
+% Solve for feasible steady-state pair (x_bar, u_bar) 
+M = [eye(4)-A, -B;
+    C, D]; 
+rhs = [zeros(4,1); y_f]; 
+sol = M \ rhs;   
+x_bar = sol(1:4); 
+u_bar = sol(5:6);   
+
+% Optional residual check 
+residual = M*sol - rhs; 
+norm_residual = norm(residual);
+
 % Initial states
 % True System
 x = zeros(4, T+1);
-x(:,1) = [0.951, ((0.01651 + (a2/a1)*(x(3)))/0.951)-0.0165, 0.31, 0];
+x(:,1) = [1.081, ((0.01651 + (a2/a1)*(x(3)))/1.081)-0.0165, 0.31, 0];
 u = zeros(2, T+1);
 u(:,1) = [x(1,1)*(k0+x(2,1)), (a3 + a2*a3*a4 + a5)*(x(3,1))];
 y = zeros(1, T+1);
@@ -80,13 +92,14 @@ y(:, 1) = C*x(:,1) + D*u(:,1);
 
 % Estimators 
 x_hat = zeros(4, T+1);
-x_hat(:, 1) = x_bar;
+x_hat(:, 1) = [1.081, ((0.01651 + (a2/a1)*(x(3)))/1.081)-0.0165, 0.31, 0];
 y_hat = zeros(1, T+1);
 y_hat(:,1) = C*x_hat(:,1) + D*u(:,1);
 
 %% Simulate true system + observer 
 for t = 1:T 
     % True system 
+    u(:,t) = u_bar - K*(x(:,t) - x_bar);
     x(:,t+1) = A * x(:,t) + B * u(:,t); 
     y(t+1) = C * x(:,t+1) + D * u(:,t+1); 
     % Observer 

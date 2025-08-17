@@ -34,12 +34,12 @@ y(:,1) = x(1);
 
 % Simulation loop
 for t = 1:T 
+    u(1, t) = 0;
+    u(2, t) = 0;
     x(1,t+1) = x(1,t) - (k0+x(2,t))*x(1,t) + u(1,t);           % Glucose Concentration
     x(2,t+1) = x(2,t) - a1*x(2,t) + a2*x(3,t);                  % k(t)
     x(3,t+1) = x(3,t) - a3*x(3,t) + a4*x(2,t) + a6*x(4,t) + u(2,t); % i(t)
-    x(4,t+1) = x(4,t) - a6*x(4,t) + a5*x(3,t);                   % i3(t)
-    u(1, t) = 0.1184;
-    u(2, t) = (a3 + a2*a3*a4 + a5) * x(3,t);  
+    x(4,t+1) = x(4,t) - a6*x(4,t) + a5*x(3,t);                   % i3(t)  
 end
 
 % Plotting

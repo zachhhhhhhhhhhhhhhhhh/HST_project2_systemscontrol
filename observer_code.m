@@ -70,6 +70,7 @@ disp('Eigenvalues of observer: ');
 disp(eig(A_obs))
 
 % Solve for feasible steady-state pair (x_bar, u_bar) 
+y_f = 0;
 M = [eye(4)-A, -B;
     C, D]; 
 rhs = [zeros(4,1); y_f]; 
@@ -80,6 +81,8 @@ u_bar = sol(5:6);
 % Optional residual check 
 residual = M*sol - rhs; 
 norm_residual = norm(residual);
+
+T=180;
 
 % Initial states
 % True System
